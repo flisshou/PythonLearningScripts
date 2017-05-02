@@ -61,7 +61,7 @@ class RemoteControl:
 
     def scp_remote_video(self, remote_video_path):
         local_video_path = '/tmp/CopiedVideo.mp4'
-        local_thumbnail_path = '{}/{}'.format(args.d, self.thname)
+        local_thumbnail_path = '{}/{}'.format(self.local_thumbnail_dir, self.thname)
         print('local_thumbnail_path = {}'.format(local_thumbnail_path))
         if self.ssh:
             self.scp = SCPClient(self.ssh.get_transport())
@@ -70,7 +70,7 @@ class RemoteControl:
             FFmpegParser(video_path=local_video_path, thumbnail_path=local_thumbnail_path)
 
     def write_message(self):
-        msg = '{} {} ==> {}/{}'.format(self.addr, self.vname, args.d, self.thname)
+        msg = '{} {} ==> {}/{}'.format(self.addr, self.vname, self.local_thumbnail_dir, self.thname)
         print(msg)
 
 
@@ -102,25 +102,24 @@ def get_account(addr):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='A script for generating thumbnails.')
+    parser.add_argument('ip', action='store', help='ip address of device(s)')
     parser.add_argument('source', action='store', help='source directory')
-    parser.add_argument('-a', action='append', help='ip address of device(s)')
     parser.add_argument('-d', action='store', help='output directory', default='tmp')
 
     args = parser.parse_args()
 
-    for ip in args.a:
-        local_dir_name = make_local_dir(dir_name=args.d, ip=ip)
+    local_dir_name = make_local_dir(dir_name=args.d, ip=ip)
 
-        try:
-            rc = RemoteControl(addr=ip, dir=local_dir_name)
-            rc.check_videos()
+    try:
+        rc = RemoteControl(addr=ip, dir=local_dir_name)
+        rc.check_videos()
 
-        except KeyboardInterrupt:
-            print('\n\nKeyboardInterrupt: Exit')
-            sys.exit(1)
+    except KeyboardInterrupt:
+        print('\n\nKeyboardInterrupt: Exit')
+        sys.exit(1)
 
-        except EOFError:
-            print('\n\nBye!')
-            sys.exit(1)
+    except EOFError:
+        print('\n\nBye!')
+        sys.exit(1)
 
 
