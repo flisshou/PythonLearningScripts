@@ -1,7 +1,11 @@
-#/usr/bin/env python3
+#!/usr/bin/env python3
 
-import os, sys, time
+import os
+import sys, time
+import getpass
 import subprocess
+import argparse
+import socket
 from paramiko import client
 from scp import SCPClient
 
@@ -13,20 +17,28 @@ class RemoteControl:
     ssh = None
     scp = None
     addr = ''
+    local_thumbnail_dir = ''
     remote_dir = ''
 
-    def __init__(self, addr):
-        username = sys.argv[2]
-        password = sys.argv[3]
+    def __init__(self, addr, dir):
+        username, password = get_account(addr)
 
         self.ssh = client.SSHClient()
         self.ssh.set_missing_host_key_policy(client.AutoAddPolicy())
-        self.ssh.connect(addr, username=username, password=password)
+
+        try:
+            print('>>> Connecting to {}...'.format(addr))
+            self.ssh.connect(addr, username=username, password=password, timeout=10)
+
+        except socket.error:
+            print('>>> Could not connect to remote device - {}\n'.format(addr))
+            time.sleep(2)
 
         self.addr = addr
+        self.local_thumbnail_dir = dir
 
     def check_videos(self):
-        self.remote_dir = sys.argv[4]
+        self.remote_dir = args.source
         command = 'cd {}; ls'.format(self.remote_dir)
 
         stdin, stdout, stderr = self.ssh.exec_command(command)
@@ -41,12 +53,12 @@ class RemoteControl:
                     video_path = '{}/{}'.format(self.remote_dir, v)
                     self.scp_remote_video(remote_video_path=video_path)
 
-                else:
-                    print('No matching time data.')
+        else:
+            print('No matching time data.')
 
     def scp_remote_video(self, remote_video_path):
         local_video_path = '/tmp/CopiedVideo.mp4'
-        local_thumbnail_path = '{}/{}'.format(sys.argv[5], self.thname)
+        local_thumbnail_path = '{}/{}'.format(args.d, self.thname)
 
         if self.ssh:
             self.scp = SCPClient(self.ssh.get_transport())
@@ -54,20 +66,56 @@ class RemoteControl:
 
             FFmpegParser(video_path=local_video_path, thumbnail_path=local_thumbnail_path)
 
+    def write_message(self):
+        msg = '{} {} ==> {} {}'.format(self.addr, self.)
+
 
 class FFmpegParser:
     """
     Use simple ffmpeg command to screenshot the video(s) from ssh/scp processes
     """
 
-    def __init__(self, video_path, thumbnail_path):
-        command = 'ffmpeg -i {} -ss 00:00:15.000 -vframes 1 {}'.format(video_path, thumbnail_path)
+    def __init__(self, video_path, thumbnail_path, second=15):
+        command = 'ffmpeg -i {} -ss 00:00:{}.000 -vframes 1 {}'.format(video_path, second, thumbnail_path)
         subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 
 
+def make_local_dir(dir_name, ip='0.0.0.0'):
+    path = '/{}/{}'.format(dir_name, ip)
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def get_account(addr):
+    print('>>> Remote Login as a Client - {}'.format(addr))
+    username = input('\tUsername: ')
+    password = getpass.unix_getpass(prompt='\tPassword: ')
+    print()
+
+    return username, password
+
 
 if __name__ == '__main__':
-   rc = RemoteControl(addr=sys.argv[1])
-   rc.check_videos()
+    parser = argparse.ArgumentParser(description='A script for generating thumbnails.')
+    parser.add_argument('source', action='store', help='source directory')
+    parser.add_argument('-t', action='append', help='the GMT timeframe(s); <YYYYMMDD-HH>')
+    parser.add_argument('-a', action='append', help='ip address of device(s)')
+    parser.add_argument('-d', action='store', help='output directory', default='tmp')
+
+    args = parser.parse_args()
+
+    for ip in args.a:
+        local_dir_name = make_local_dir(dir_name=args.d, ip=ip)
+
+        try:
+            rc = RemoteControl(addr=ip, dir=local_dir_name)
+
+        except KeyboardInterrupt:
+            print('\n\nKeyboardInterrupt: Exit')
+            sys.exit(1)
+
+        except EOFError:
+            print('\n\nBye!')
+            sys.exit(1)
 
 
