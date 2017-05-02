@@ -53,6 +53,7 @@ class RemoteControl:
 
                     video_path = '{}/{}'.format(self.remote_dir, v)
                     self.scp_remote_video(remote_video_path=video_path)
+                    self.write_message()
 
         else:
             print('No matching time data.')
@@ -111,6 +112,7 @@ if __name__ == '__main__':
 
         try:
             rc = RemoteControl(addr=ip, dir=local_dir_name)
+            rc.check_videos()
 
         except KeyboardInterrupt:
             print('\n\nKeyboardInterrupt: Exit')
