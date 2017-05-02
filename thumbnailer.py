@@ -17,6 +17,7 @@ class RemoteControl:
     ssh = None
     scp = None
     addr = ''
+
     local_thumbnail_dir = ''
     remote_dir = ''
 
@@ -67,7 +68,8 @@ class RemoteControl:
             FFmpegParser(video_path=local_video_path, thumbnail_path=local_thumbnail_path)
 
     def write_message(self):
-        msg = '{} {} ==> {} {}'.format(self.addr, self.)
+        msg = '{} {} ==> {}/{}'.format(self.addr, self.vname, self.local_thumbnail_dir, self.thname)
+        print(msg)
 
 
 class FFmpegParser:
