@@ -108,10 +108,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    local_dir_name = make_local_dir(dir_name=args.d, ip=ip)
+    local_dir_name = make_local_dir(dir_name=args.d, ip=args.ip)
 
     try:
-        rc = RemoteControl(addr=ip, dir=local_dir_name)
+        rc = RemoteControl(addr=args.ip, dir=local_dir_name)
         rc.check_videos()
 
     except KeyboardInterrupt:
