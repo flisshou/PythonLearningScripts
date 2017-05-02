@@ -86,7 +86,7 @@ class FFmpegParser:
 
 
 def make_local_dir(dir_name, ip='0.0.0.0'):
-    path = '/{}/{}'.format(dir_name, ip)
+    path = '{}/{}'.format(dir_name, ip)
     os.makedirs(path, exist_ok=True)
     return path
 
@@ -104,7 +104,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='A script for generating thumbnails.')
     parser.add_argument('ip', action='store', help='ip address of device(s)')
     parser.add_argument('source', action='store', help='source directory')
-    parser.add_argument('-d', action='store', help='output directory', default='tmp')
+    parser.add_argument('-d', action='store', help='output directory', default='/tmp')
 
     args = parser.parse_args()
 
