@@ -62,7 +62,7 @@ class RemoteControl:
     def scp_remote_video(self, remote_video_path):
         local_video_path = '/tmp/CopiedVideo.mp4'
         local_thumbnail_path = '{}/{}'.format(self.local_thumbnail_dir, self.thname)
-        print('local_thumbnail_path = {}'.format(local_thumbnail_path))
+        # print('local_thumbnail_path = {}'.format(local_thumbnail_path))
         if self.ssh:
             self.scp = SCPClient(self.ssh.get_transport())
             self.scp.get(remote_path=remote_video_path, local_path=local_video_path)
